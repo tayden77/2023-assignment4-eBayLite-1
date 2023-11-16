@@ -81,3 +81,13 @@ body {
   color: darkorange;
 }
 
+.watchlist-icon {
+  background-color: white;
+  color: rgb(65, 112, 255);
+  cursor: pointer;
+}
+
+.watchlist-icon.in-watchlist {
+  background-color: rgb(65, 112, 255);;
+  color: white;
+}

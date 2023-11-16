@@ -90,17 +90,19 @@
                         <div class="col-4">
                             <!-- Watchlist button-->
                             {% if user.is_authenticated %}
-                                {% if not watching %}
-                                <form action="{% url 'addWatchlist' auction.id %}" method="post">
-                                    {% csrf_token %} 
-                                    <button type="submit" id="watchlist_button" class="btn btn-outline-primary" style="width: 150px">Add to Watchlist</button>
-                                </form>
-                                {% else %}
-                                <form action="{% url 'removeWatchlist' auction.id %}" method="post">
-                                    {% csrf_token %} 
-                                    <button type="submit" id="watchlist_button2" class="btn btn-outline-primary" style="width: 200px">Remove from Watchlist</button>
-                                </form>
-                                {% endif %}
+                                <div id="watchlist-icon-{{ auction.id }}" class="watchlist-icon" data-auctionn-id="{{ auction.id }}" onclick="toggleWatchlist(this)">
+                                    {% if not watching %}
+                                    <form action="{% url 'addWatchlist' auction.id %}" method="post">
+                                        {% csrf_token %} 
+                                        <i class="fas fa-heart" style="color: blue;"></i>
+                                    </form>
+                                    {% else %}
+                                    <form action="{% url 'removeWatchlist' auction.id %}" method="post">
+                                        {% csrf_token %} 
+                                        <i class="fas fa-heart-broken" style="color: red;"></i>
+                                    </form>
+                                    {% endif %}
+                                </div>
                             {% endif %}
                         </div>
                     </div> 
@@ -182,6 +184,54 @@
         
     </div>
 
+    <script>
+        function toggleWatchlist(element) {
+            const auctionId = element.getAttribute('data-auction-id');
+            const iconElement = document.getElementById(`watchlist-icon-${auctionId}`);
+            const isInWatchlist = iconElement.classList.contains('in-watchlist');
+            const url = isInWatchlist ? '/removeWatchlist/${auctionId}/' : '/addWatchlist/${auctionId}/';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'), 
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 'auction_id': auctionId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    iconElement.classList.toggle('in-watchlist');
+                    if (data.added) {
+                        iconElement.innerHTML = '<i class="fas fa-heart-broken" style="color: red;"></i>'
+                    } else {
+                        iconElement.innerHTML = '<i class="fas fa-heart" style="color: blue;"></i>'
+                    }
+                } else {
+                    console.error('Error:', data.message);
+                }
+            })
+            .catch(error => console.error('Fetch Error:', error));
+        }
+    </script>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookievalue = decodedURIComponenet(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
     
 
 {% endblock %}

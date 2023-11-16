@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -239,7 +239,7 @@ def listing(request, auction_id):
                 # assign the highest_bidder
                 highest_bidder = highest_bid.bider
 
-                # check the request user if the bid winner    
+                # check the request user of the bid winner    
                 if user == highest_bidder:
                     messages.info(request, 'Congratulation. You won the bid.')
                 else:
@@ -465,13 +465,19 @@ def addWatchlist(request, auction_id):
 
         return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
         
-     
+    elif request.is_ajax():
+        if addWatchlist: 
+            return JsonResponse({"status": "success", "added": True})
+        else:
+            return JsonResponse({"status": "error", "message": "Invalid JSON Response"})
+
     # addWatchlist view do not support get method
     else:
         return render(request, "auctions/error.html", {
             "code": 405,
             "message": "The GET method is not allowed."
         })
+
 
 
 @login_required(login_url="login")
@@ -501,6 +507,12 @@ def removeWatchlist(request, auction_id):
             messages.success(request, 'Removed from your watchlist.')
 
             return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+        
+        elif request.is_ajax():
+            if removeWatchlist: 
+                return JsonResponse({"status": "success", "removed": True})
+            else:
+                return JsonResponse({"status": "error", "message": "Invalid JSON Response"})
         
         else:
             # return error message
