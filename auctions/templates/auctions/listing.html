@@ -9,48 +9,44 @@
         <div class="row">
             <!-- Auction listing's image -->
             <div class="col py-3">
-                <img src="{{ auction.imageURL }}" alt="auction.title" style="width: 22vw; min-width: 320px; max-width: 400ox; height:auto;">
+                <img src="{{ auction.imageURL }}" alt="{{ auction.title }}" style="width: 22vw; min-width: 320px; max-width: 400px; height:auto;">
             </div>
 
-            <!-- auction listing details-->
+            <!-- Auction listing details -->
             <div class="col my-3 center-block">
-                <h3>{{ auction.title }}</h3>
-
-                <!-- watching badge -->
-                {% if user.is_authenticated %}
-                    {% if watching %}
-                    <h5><span class="badge badge-dark">Watching</span></h5>
-                    {% endif %}
-                {% endif %}
-
-                <div class="row mb-3">
-                    <div class="col-md-2">
-                        <div>Status:</div>
-                        <div>
-                            <strong> 
-                            {% if auction.closed %}
-                                Closed
-                            {% else %}
-                                Active
-                            {% endif %}
-                            </strong>
-                        </div>
+                <!-- Header with title, watchlist icon, status, and close button -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <!-- Title and Watchlist Icon -->
+                    <div class="d-flex align-items-center">
+                        <h3 class="mr-2">{{ auction.title }}</h3>
+                        <!-- Watchlist Icon -->
+                        {% if user.is_authenticated %}
+                            <div>
+                                {% if auction in user.watchlist.auctions.all %}
+                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: blue;"></i>
+                                {% else %}
+                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart-broken watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: white;"></i>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
 
-                    <div class="col-md-auto">
+                    <!-- Listing Status and Close Button -->
+                    <div>
+                        <div class="mr-3 d-inline">
+                            <strong>Status: {% if auction.closed %}Closed{% else %}Active{% endif %}</strong>
+                        </div>
                         {% if user.is_authenticated and not auction.closed and user == auction.seller %}
-                         <!-- close listing form -->
-                        <form action="{% url 'close' auction.id %}" method="post">
-                            {% csrf_token %}
-
-                            <div class="form group py-3">  
+                            <!-- Close listing form -->
+                            <form action="{% url 'close' auction.id %}" method="post">
+                                {% csrf_token %}
                                 <button type="submit" class="btn btn-primary btn-sm" style="width: 120px">Close listing</button>
-                            </div>
-                        </form> 
-                        {% endif %}  
+                            </form>
+                        {% endif %}
                     </div>
                 </div>
-                    
+
+                <!-- Description, Price, and Other Details -->
                 <div>Description:</div>
                 <div><p>{{ auction.description }}</p></div>
                 <div>Current price:</div>
@@ -65,15 +61,13 @@
                 <div><p><small>{{ auction.update_date }}</small></p></div>
                 <span class="form-text text-muted">{{ bid_Num }} Bid(s) so far.</span>  
 
+                <!-- Bidding Section -->
                 {% if not auction.closed  %}
-                <div class="container" id="button_group">
-                    <div class="row">
-                        <div class="col-6">
-                            <!-- Bid form and button -->
-                            <form action="{% url 'bid' auction.id %}" method="post">
-                                {% csrf_token %}
-
-                                {% for field in form %}
+                    <div id="button_group">
+                        <!-- Bid form and button -->
+                        <form action="{% url 'bid' auction.id %}" method="post">
+                            {% csrf_token %}
+                            {% for field in form %}
                                 <div class="form-group">
                                     <label><strong>{{ field.label }}:</strong></label>
                                     <div>{{ field }}</div>
@@ -81,39 +75,17 @@
                                         <span class="form-text text-muted">Please place your bid higher than the current price.</span>  
                                     </small>
                                 </div>
-                                {% endfor %}
-
-                                <button type="submit" id="bid_button" class="btn btn-primary" style="width: 150px">Bid</button>
-                            </form> 
-                        </div>
-
-                        <div class="col-4">
-                            <!-- Watchlist button-->
-                            {% if user.is_authenticated %}
-                                <div id="watchlist-icon-{{ auction.id }}" class="watchlist-icon" data-auctionn-id="{{ auction.id }}" onclick="toggleWatchlist(this)">
-                                    {% if not watching %}
-                                    <form action="{% url 'addWatchlist' auction.id %}" method="post">
-                                        {% csrf_token %} 
-                                        <i class="fas fa-heart" style="color: blue;"></i>
-                                    </form>
-                                    {% else %}
-                                    <form action="{% url 'removeWatchlist' auction.id %}" method="post">
-                                        {% csrf_token %} 
-                                        <i class="fas fa-heart-broken" style="color: red;"></i>
-                                    </form>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div> 
-                </div>
-
+                            {% endfor %}
+                            <button type="submit" id="bid_button" class="btn btn-primary" style="width: 150px">Bid</button>
+                        </form> 
+                    </div>
                 {% else %}
+                    <!-- Auction Closed Message -->
                     {% if highest_bidder %}
                         {% if user.is_authenticated and user == highest_bidder %}
-                        <p><strong>Congratulation! You won the bid.</strong></p>
+                            <p><strong>Congratulations! You won the bid.</strong></p>
                         {% else %}
-                        <p>The bid winner is <strong>{{ highest_bidder.username }}</strong>.</p>
+                            <p>The bid winner is <strong>{{ highest_bidder.username }}</strong>.</p>
                         {% endif %}
                     {% else %}
                         <p>No bid winner.</p>
@@ -125,71 +97,60 @@
 
     <hr id="listing_divider">
 
-    <!-- comment form -->
+    <!-- Comment Form and Display Section -->
     {% if user.is_authenticated %}
-    <div class="container my-5" id="comment_block">
-    <h4>Leave your comment</h4>
-    <form action="{% url 'comment' auction.id %}" method="post">
-        {% csrf_token %} 
-
-        <div class="row">
-            <div class="col">
-                <div><label>Headline:</label></div>
-                <div>{{ commentForm.headline }}</div>
-            </div>
+        <!-- Comment Form -->
+        <div id="comment_block">
+            <h4>Leave your comment</h4>
+            <form action="{% url 'comment' auction.id %}" method="post">
+                {% csrf_token %} 
+                <div class="row">
+                    <div class="col">
+                        <div><label>Headline:</label></div>
+                        <div>{{ commentForm.headline }}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div><label>Content:</label></div>
+                        <div>{{ commentForm.message }}</div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col"> 
+                        <button type="submit" id="comment_button" class="btn btn-primary" style="width: 120px">Submit</button>
+                    </div>          
+                </div>
+            </form>
         </div>
 
-        <div class="row">
-            <div class="col">
-                <div><label>Content:</label></div>
-                <div>{{ commentForm.message }}</div>
-            </div>
+        <!-- Comments Display -->
+        <div id="comment_display">
+            <h4>Item comment(s)</h4>
+            {% if comments %}
+                {% for comment in comments %}
+                    <div class="card bg-dark mb-3">
+                        <div class="card-header">
+                            <strong>{{ comment.user.username }}</strong>
+                            <div class="text-muted small">commented on {{ comment.cm_date }}</div>       
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ comment.headline }}</h5>
+                            <p class="card-text">{{ comment.message }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No comments so far.</p>
+            {% endif %}
         </div>
-
-        <div class="row">
-            <div class="col"> 
-                <button type="submit" id="comment_button" class="btn btn-primary" style="width: 120px">Submit</button>
-            </div>          
-        </div>
-    </form>
-    
-    </div>
     {% endif %}
-
-    <!-- comments display -->
-    <div class="container" id="comment_display">
-        <h4>Item comment(s)</h4>
-        {% if comments %}
-
-        {% for comment in comments %}
-        <div class="card bg-dark mb-3">
-           
-            <div class="card-header">
-                <strong>{{ comment.user.username }} </strong>
-                <div class="text-muted small">
-                    commented on {{ comment.cm_date }}
-                </div>       
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">{{ comment.headline }}</h5>
-              <p class="card-text"> {{ comment.message }}</p>
-            </div>
-            
-        </div>
-        {% endfor %}
-
-        {% else %}
-        <p>No comments so far.</p>
-        {% endif %}
-        
-    </div>
 
     <script>
         function toggleWatchlist(element) {
             const auctionId = element.getAttribute('data-auction-id');
-            const iconElement = document.getElementById(`watchlist-icon-${auctionId}`);
-            const isInWatchlist = iconElement.classList.contains('in-watchlist');
-            const url = isInWatchlist ? '/removeWatchlist/${auctionId}/' : '/addWatchlist/${auctionId}/';
+            const isInWatchlist = element.classList.contains('in-watchlist');
+            const url = isInWatchlist ? `/listing/${auctionId}/removeWatchlist/` : `/listing/${auctionId}/addWatchlist/`;
 
             fetch(url, {
                 method: 'POST',
@@ -201,22 +162,34 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log("server response:", data);
                 if (data.status === 'success') {
-                    iconElement.classList.toggle('in-watchlist');
-                    if (data.added) {
-                        iconElement.innerHTML = '<i class="fas fa-heart-broken" style="color: red;"></i>'
-                    } else {
-                        iconElement.innerHTML = '<i class="fas fa-heart" style="color: blue;"></i>'
-                    }
+                    element.classList.toggle('in-watchlist');
+                    // For debugging:
+                    console.log("Toggled watchlist status:", element.classList.contains('in-watchlist'));
                 } else {
                     console.error('Error:', data.message);
                 }
             })
-            .catch(error => console.error('Fetch Error:', error));
+            .catch(error => {
+                console.error('Fetch Error:', error);
+            });
         }
-    </script>
 
-    <script>
+        function updateIconAppearance(element, isInWatchlist) {
+            if (isInWatchlist) {
+                // Change to broken heart (fa-heart-broken) for items not in watchlist
+                element.classList.remove('fa-heart');
+                element.classList.add('fa-heart-broken');
+                element.style.color = 'white';
+            } else {
+                // Change to solid heart (fa-heart) for items in watchlist
+                element.classList.remove('fa-heart-broken');
+                element.classList.add('fa-heart');
+                element.style.color = 'blue';
+            }
+        }
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -224,7 +197,7 @@
                 for (let i = 0; i < cookies.length; i++) {
                     const cookie = cookies[i].trim();
                     if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookievalue = decodedURIComponenet(cookie.substring(name.length + 1));
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                         break;
                     }
                 }
@@ -233,5 +206,4 @@
         }
     </script>
     
-
 {% endblock %}

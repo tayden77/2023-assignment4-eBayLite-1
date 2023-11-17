@@ -82,12 +82,14 @@ body {
 }
 
 .watchlist-icon {
-  background-color: white;
   color: rgb(65, 112, 255);
+  font-size: 24px;
+  vertical-align: middle;
   cursor: pointer;
+  margin-left: 10px;
 }
 
 .watchlist-icon.in-watchlist {
-  background-color: rgb(65, 112, 255);;
   color: white;
+  cursor:pointer;
 }
