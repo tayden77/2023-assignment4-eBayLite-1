@@ -23,9 +23,9 @@
                         {% if user.is_authenticated %}
                             <div>
                                 {% if auction in user.watchlist.auctions.all %}
-                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: blue;"></i>
+                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: blue;"></i>
                                 {% else %}
-                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart-broken watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: white;"></i>
+                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart-broken watchlist-icon" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: red;"></i>
                                 {% endif %}
                             </div>
                         {% endif %}
@@ -152,6 +152,8 @@
             const isInWatchlist = element.classList.contains('in-watchlist');
             const url = isInWatchlist ? `/listing/${auctionId}/removeWatchlist/` : `/listing/${auctionId}/addWatchlist/`;
 
+            console.log("Auction ID:", auctionId, "Is in Watchlist:", isInWatchlist, "URL:", url);
+
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -162,11 +164,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log("server response:", data);
+                console.log("Response Data:", data);
                 if (data.status === 'success') {
-                    element.classList.toggle('in-watchlist');
-                    // For debugging:
-                    console.log("Toggled watchlist status:", element.classList.contains('in-watchlist'));
+                    const wasAdded = data.hasOwnProperty('added');
+                    updateIconAppearance(element, wasAdded);
+                    element.classList.toggle('in-watchlist', wasAdded);
                 } else {
                     console.error('Error:', data.message);
                 }
@@ -176,17 +178,15 @@
             });
         }
 
-        function updateIconAppearance(element, isInWatchlist) {
-            if (isInWatchlist) {
-                // Change to broken heart (fa-heart-broken) for items not in watchlist
-                element.classList.remove('fa-heart');
-                element.classList.add('fa-heart-broken');
-                element.style.color = 'white';
-            } else {
-                // Change to solid heart (fa-heart) for items in watchlist
+        function updateIconAppearance(element, isAdded) {
+            if (isAdded) {
                 element.classList.remove('fa-heart-broken');
                 element.classList.add('fa-heart');
                 element.style.color = 'blue';
+            } else {
+                element.classList.remove('fa-heart');
+                element.classList.add('fa-heart-broken');
+                element.style.color = 'red';
             }
         }
 
