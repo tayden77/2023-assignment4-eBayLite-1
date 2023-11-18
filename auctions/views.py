@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.urls import reverse
 
 from .models import User, Auction, Bid, Category, Comment, Watchlist
@@ -239,7 +239,7 @@ def listing(request, auction_id):
                 # assign the highest_bidder
                 highest_bidder = highest_bid.bider
 
-                # check the request user of the bid winner    
+                # check the request user if the bid winner    
                 if user == highest_bidder:
                     messages.info(request, 'Congratulation. You won the bid.')
                 else:
@@ -428,56 +428,112 @@ def comment(request, auction_id):
             "message": "The GET method is not allowed."
         })
 
+
 @login_required(login_url="login")
 def addWatchlist(request, auction_id):   
+    # check to handle POST method only
     if request.method == "POST":
-        auction = get_object_or_404(Auction, pk=auction_id)
-        watchlist, created = Watchlist.objects.get_or_create(user=request.user)
-
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-        if auction in watchlist.auctions.all():
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": "Already in watchlist"})
-            else:
-                messages.error(request, 'You already added this to your watchlist')
-                return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-        else:
-            watchlist.auctions.add(auction)
-            if is_ajax:
-                return JsonResponse({"status": "success", "added": True})
-            else:
-                messages.success(request, 'Added to your Watchlist')
-                return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-    else:
-        return render(request, "auctions/error.html", {
-                "code": 405,
-                "message": "The GET method is not allowed."
+        # check the existence auction
+        try:
+            # get the auction listing by id
+            auction = Auction.objects.get(pk=auction_id)     
+            
+        except Auction.DoesNotExist:
+            return render(request, "auctions/error.html", {
+                "code": 404,
+                "message": "The auction does not exist."
             })
 
-@login_required(login_url="login")
-def removeWatchlist(request, auction_id):   
-    if request.method == "POST":
-        auction = get_object_or_404(Auction, pk=auction_id)
-        watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+        # check the existence of the user's watchlist
+        try:
+            watchlist = Watchlist.objects.get(user=request.user)
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        except ObjectDoesNotExist:
+            # if no watchlist, create an watchlist object for the user
+            watchlist = Watchlist.objects.create(user=request.user)
+        
+        # check if the item exists in the user's watchlist
+        if Watchlist.objects.filter(user=request.user, auctions=auction):
+            messages.error(request, 'You already added in your watchlist')
+            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
 
-        if auction in watchlist.auctions.all():
-            watchlist.auctions.remove(auction)
-            if is_ajax:
-                return JsonResponse({"status": "success", "removed": True})
-            else:
-                messages.success(request, 'Removed from your watchlist')
-                return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-        else:
-            if is_ajax:
-                return JsonResponse({"status": "error", "message": "Not in watchlist"})
-            else:
-                messages.error(request, "You already removed this from your watchlist.")
-                return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+        # if the item is not in the watchlist
+        watchlist.auctions.add(auction)
+            
+        # return successful message
+        messages.success(request, 'Added to your Watchlist.')
+
+        return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+        
+     
+    # addWatchlist view do not support get method
     else:
         return render(request, "auctions/error.html", {
             "code": 405,
             "message": "The GET method is not allowed."
         })
+
+
+@login_required(login_url="login")
+def removeWatchlist(request, auction_id):   
+    # check to handle POST method only
+    if request.method == "POST":
+        # check the existence auction
+        try:
+            # get the auction listing by id
+            auction = Auction.objects.get(pk=auction_id)     
+            
+        except Auction.DoesNotExist:
+            return render(request, "auctions/error.html", {
+                "code": 404,
+                "message": "The auction does not exist."
+            })
+        
+        # check if the item exists in the user's watchlist
+        if Watchlist.objects.filter(user=request.user, auctions=auction):
+            # get the user's watchlist
+            watchlist = Watchlist.objects.get(user=request.user)
+           
+            # delete the auction from the users watchlist
+            watchlist.auctions.remove(auction)
+                
+            # return successful message
+            messages.success(request, 'Removed from your watchlist.')
+
+            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+        
+        else:
+            # return error message
+            messages.success(request, 'Cannot remove. Not in your watchlist.')
+
+            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+   
+     
+    # removeWatchlist view do not support get method
+    else:
+        return render(request, "auctions/error.html", {
+            "code": 405,
+            "message": "The GET method is not allowed."
+        })
+        
+
+def get_comments(request):
+    try:
+        comments = Comment.objects.all()
+
+        # Manually serialize the comments into a JSON format
+        comments_data = [
+            {
+                'username': comment.user.username,
+                'cm_date': comment.cm_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'headline': comment.headline,
+                'message': comment.message,
+            }
+            for comment in comments
+        ]
+
+        return JsonResponse(comments_data, safe=False, content_type='application/json')
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    
