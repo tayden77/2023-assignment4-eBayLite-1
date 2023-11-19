@@ -19,29 +19,25 @@ body {
 }
 
 .row {
+  display: flex;
+  align-items: flex-start;
   margin-top: 20px;
 }
 
+.col {
+  flex: 1;
+  padding: 15px;
+}
+
 .col img{
-  width: 28vw; 
+  width: 40%; 
   min-width: 330px; 
+  max-width: 400px;
   height: auto;
   display: block;
   margin-left: auto;
   margin-right: auto;
   width: 60%;
-}
-
-.watchlist_button {
-  position: absolute;
-  left: 0;
-  bottom: 0; 
-}
-
-.watchlist_button2 {
-  position: absolute;
-  left: 0;
-  bottom: 0; 
 }
 
 .button_group{
@@ -97,6 +93,7 @@ body {
 .watchlist-icon-container {
   display: flex;
   align-items: center;
+  margin-bottom: 15px;
   justify-content: space-between;
 }
 
@@ -113,8 +110,4 @@ body {
       font-size: 14px;
       max-width: 50%;
   }
-}
-
-.watchlist-icon {
-  margin-left: 10px;
 }
