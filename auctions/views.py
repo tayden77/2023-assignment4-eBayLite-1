@@ -429,32 +429,40 @@ def comment(request, auction_id):
 
 @login_required(login_url="login")
 def addWatchlist(request, auction_id):   
+    # Check if the request method is POST
     if request.method == "POST":
+        # Get the auction item or return a 404 not found error
         auction = get_object_or_404(Auction, pk=auction_id)
         watchlist, created = Watchlist.objects.get_or_create(user=request.user)
-
+        # If the auction listing is already in the watchlist return a JSON error
         if auction in watchlist.auctions.all():
             print(f"Auction {auction_id} is already in the watchlist")
             return JsonResponse({"status": "error", "message": "Already in watchlist"})
         else:
+            # Otherwise add the listing to the user's watchlist and the watchlist icon should change state
             watchlist.auctions.add(auction)
             print(f"Auction {auction_id} added to the watchlist")
             return JsonResponse({"status":"success", "added": True})
     else:
+        # If the request method is not a POST return a JSON error
         return JsonResponse({"status": "error", "message": "GET method not allowed"}, status=405)
     
 @login_required(login_url="login")
-def removeWatchlist(request, auction_id):   
+def removeWatchlist(request, auction_id):  
+    # Check if the request method is POST 
     if request.method == "POST":
+        # Get the auction item or return a 404 not found error
         auction = get_object_or_404(Auction, pk=auction_id)
         watchlist, created = Watchlist.objects.get_or_create(user=request.user)
-
+        # If the auction listing is in the watchlist, remove it and return a JSON success response. Icon should change state
         if auction in watchlist.auctions.all():
             watchlist.auctions.remove(auction)
             print(f"Auction {auction_id} removed from the watchlist")
             return JsonResponse({"status": "success", "removed": True})
         else:
+            # Otherwise the listing was already removed so return a JSON error
             print(f"Auction {auction_id} not in the watchlist")
             return JsonResponse({"status": "error", "message": "Not in watchlist"})
     else:
+        # If the request method is not a POST return a JSON error
         return JsonResponse({"status": "error", "message": "GET method not allowed"})

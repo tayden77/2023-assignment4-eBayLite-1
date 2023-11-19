@@ -93,3 +93,28 @@ body {
   color: white;
   cursor:pointer;
 }
+
+.watchlist-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auction-title {
+  margin-right: 10px;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 600px) {
+  .auction-title {
+      font-size: 14px;
+      max-width: 50%;
+  }
+}
+
+.watchlist-icon {
+  margin-left: 10px;
+}

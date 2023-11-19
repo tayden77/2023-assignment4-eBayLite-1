@@ -17,13 +17,15 @@
                 <!-- Header with title, watchlist icon, status, and close button -->
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <!-- Title and Watchlist Icon -->
-                    <div class="d-flex align-items-center">
-                        <h3 class="mr-2">{{ auction.title }}</h3>
+                    <div class="watchlist-icon-container">
+                        <h3 class="auction-title mr-2">{{ auction.title }}</h3>
                         <!-- Watchlist Icon -->
                         {% if user.is_authenticated %}
                             <div>
+                                <!-- If the auction listing is in user's watchlist display a solid red heart icon -->
                                 {% if auction in user.watchlist.auctions.all %}
-                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: blue;"></i>
+                                    <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: red;"></i>
+                                <!-- Otherwise the listing is not in user's watchlist. Display a red broken heart -->
                                 {% else %}
                                     <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart-broken watchlist-icon" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: red;"></i>
                                 {% endif %}
@@ -147,13 +149,14 @@
     {% endif %}
 
     <script>
+        // Method to determine the presence of a listing in the watchlist and either add or remove it based on user interaction
         function toggleWatchlist(element) {
             const auctionId = element.getAttribute('data-auction-id');
             const isInWatchlist = element.classList.contains('in-watchlist');
             const url = isInWatchlist ? `/listing/${auctionId}/removeWatchlist/` : `/listing/${auctionId}/addWatchlist/`;
-
+            // DEBUG: print statement to show whether listing is in watchlist (boolean)
             console.log("Auction ID:", auctionId, "Is in Watchlist:", isInWatchlist, "URL:", url);
-
+            // Fetch appropriate URL to add or remove a listing from user's watchlist, return a JSON response and data, and toggle icon state
             fetch(url, {
                 method: 'POST',
                 headers: {
@@ -177,19 +180,19 @@
                 console.error('Fetch Error:', error);
             });
         }
-
+        // Method to update the state of the watchlist icon based on whether the listing is in or out of user's watchlist
         function updateIconAppearance(element, isAdded) {
             if (isAdded) {
                 element.classList.remove('fa-heart-broken');
                 element.classList.add('fa-heart');
-                element.style.color = 'blue';
+                element.style.color = 'red';
             } else {
                 element.classList.remove('fa-heart');
                 element.classList.add('fa-heart-broken');
                 element.style.color = 'red';
             }
         }
-
+        // Method to retrieve value of a specified cookie by its name. Gets the CSRF token from cookies for POST request
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
