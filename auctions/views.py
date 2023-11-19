@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 
 from .models import User, Auction, Bid, Category, Comment, Watchlist
@@ -120,7 +120,6 @@ def watchlist(request):
         auctions = None
         watchingNum = 0
     
-
     return render(request, "auctions/watchlist.html", {
         # return the listings in the watchlist
         "watchlist": watchlist,
@@ -220,7 +219,7 @@ def listing(request, auction_id):
 
         # the auction is closed
         else:
-            # check the if there is bid for the auction listing
+            # check if there is bid for the auction listing
             if highest_bid is None:
                 messages.info(request, 'The bid is closed and no bidder.')
 
@@ -428,94 +427,45 @@ def comment(request, auction_id):
             "message": "The GET method is not allowed."
         })
 
-
 @login_required(login_url="login")
 def addWatchlist(request, auction_id):   
-    # check to handle POST method only
+    # Check if the request method is POST
     if request.method == "POST":
-        # check the existence auction
-        try:
-            # get the auction listing by id
-            auction = Auction.objects.get(pk=auction_id)     
-            
-        except Auction.DoesNotExist:
-            return render(request, "auctions/error.html", {
-                "code": 404,
-                "message": "The auction does not exist."
-            })
-
-        # check the existence of the user's watchlist
-        try:
-            watchlist = Watchlist.objects.get(user=request.user)
-
-        except ObjectDoesNotExist:
-            # if no watchlist, create an watchlist object for the user
-            watchlist = Watchlist.objects.create(user=request.user)
-        
-        # check if the item exists in the user's watchlist
-        if Watchlist.objects.filter(user=request.user, auctions=auction):
-            messages.error(request, 'You already added in your watchlist')
-            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-
-        # if the item is not in the watchlist
-        watchlist.auctions.add(auction)
-            
-        # return successful message
-        messages.success(request, 'Added to your Watchlist.')
-
-        return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-        
-     
-    # addWatchlist view do not support get method
-    else:
-        return render(request, "auctions/error.html", {
-            "code": 405,
-            "message": "The GET method is not allowed."
-        })
-
-
-@login_required(login_url="login")
-def removeWatchlist(request, auction_id):   
-    # check to handle POST method only
-    if request.method == "POST":
-        # check the existence auction
-        try:
-            # get the auction listing by id
-            auction = Auction.objects.get(pk=auction_id)     
-            
-        except Auction.DoesNotExist:
-            return render(request, "auctions/error.html", {
-                "code": 404,
-                "message": "The auction does not exist."
-            })
-        
-        # check if the item exists in the user's watchlist
-        if Watchlist.objects.filter(user=request.user, auctions=auction):
-            # get the user's watchlist
-            watchlist = Watchlist.objects.get(user=request.user)
-           
-            # delete the auction from the users watchlist
-            watchlist.auctions.remove(auction)
-                
-            # return successful message
-            messages.success(request, 'Removed from your watchlist.')
-
-            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-        
+        # Get the auction item or return a 404 not found error
+        auction = get_object_or_404(Auction, pk=auction_id)
+        watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+        # If the auction listing is already in the watchlist return a JSON error
+        if auction in watchlist.auctions.all():
+            print(f"Auction {auction_id} is already in the watchlist")
+            return JsonResponse({"status": "error", "message": "Already in watchlist"})
         else:
-            # return error message
-            messages.success(request, 'Cannot remove. Not in your watchlist.')
-
-            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
-   
-     
-    # removeWatchlist view do not support get method
+            # Otherwise add the listing to the user's watchlist and the watchlist icon should change state
+            watchlist.auctions.add(auction)
+            print(f"Auction {auction_id} added to the watchlist")
+            return JsonResponse({"status":"success", "added": True})
     else:
-        return render(request, "auctions/error.html", {
-            "code": 405,
-            "message": "The GET method is not allowed."
-        })
-        
+        # If the request method is not a POST return a JSON error
+        return JsonResponse({"status": "error", "message": "GET method not allowed"}, status=405)
+    
+@login_required(login_url="login")
+def removeWatchlist(request, auction_id):  
+    # Check if the request method is POST 
+    if request.method == "POST":
+        # Get the auction item or return a 404 not found error
+        auction = get_object_or_404(Auction, pk=auction_id)
+        watchlist, created = Watchlist.objects.get_or_create(user=request.user)
+        # If the auction listing is in the watchlist, remove it and return a JSON success response. Icon should change state
+        if auction in watchlist.auctions.all():
+            watchlist.auctions.remove(auction)
+            print(f"Auction {auction_id} removed from the watchlist")
+            return JsonResponse({"status": "success", "removed": True})
+        else:
+            # Otherwise the listing was already removed so return a JSON error
+            print(f"Auction {auction_id} not in the watchlist")
+            return JsonResponse({"status": "error", "message": "Not in watchlist"})
+    else:
+        # If the request method is not a POST return a JSON error
+        return JsonResponse({"status": "error", "message": "GET method not allowed"})
 
 def get_comments(request):
     try:
@@ -535,5 +485,3 @@ def get_comments(request):
         return JsonResponse(comments_data, safe=False, content_type='application/json')
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
-    

@@ -12,10 +12,10 @@ urlpatterns = [
     path("listing/<int:auction_id>/bid", views.bid, name="bid"),
     path("listing/<int:auction_id>/close", views.close, name="close"),
     path("listing/<int:auction_id>/comment", views.comment, name="comment"),
-    path("listing/<int:auction_id>/addWatchlist", views.addWatchlist, name="addWatchlist"),
-    path("listing/<int:auction_id>/removeWatchlist", views.removeWatchlist, name="removeWatchlist"),
+    path("listing/<int:auction_id>/addWatchlist/", views.addWatchlist, name="addWatchlist"),
+    path("listing/<int:auction_id>/removeWatchlist/", views.removeWatchlist, name="removeWatchlist"),
     path("categories/", views.categories, name="categories"),
     path("categories/<int:category_id>", views.category, name="category"),
     path("watchlist/", views.watchlist, name="watchlist"),
-    path('get_comments/', views.get_comments, name='get_comments'),
+    path('listing/get_comments/', views.get_comments, name='get_comments'),
 ]
