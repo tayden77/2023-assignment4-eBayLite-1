@@ -485,5 +485,3 @@ def get_comments(request):
         return JsonResponse(comments_data, safe=False, content_type='application/json')
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-    
-    
