@@ -238,7 +238,7 @@ def listing(request, auction_id):
                 # assign the highest_bidder
                 highest_bidder = highest_bid.bider
 
-                # check the request user of the bid winner    
+                # check the request user if the bid winner    
                 if user == highest_bidder:
                     messages.info(request, 'Congratulation. You won the bid.')
                 else:
@@ -466,3 +466,24 @@ def removeWatchlist(request, auction_id):
     else:
         # If the request method is not a POST return a JSON error
         return JsonResponse({"status": "error", "message": "GET method not allowed"})
+
+def get_comments(request):
+    try:
+        comments = Comment.objects.all()
+
+        # Manually serialize the comments into a JSON format
+        comments_data = [
+            {
+                'username': comment.user.username,
+                'cm_date': comment.cm_date.strftime('%Y-%m-%d %H:%M:%S'),
+                'headline': comment.headline,
+                'message': comment.message,
+            }
+            for comment in comments
+        ]
+
+        return JsonResponse(comments_data, safe=False, content_type='application/json')
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+    
