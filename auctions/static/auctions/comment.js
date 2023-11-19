@@ -4,10 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     commentForm.addEventListener('submit', function (e) {
         e.preventDefault();
-
+        console.log("Comment form submitted.");
         // Serialize the form data into a URL-encoded string
         var formData = new FormData(commentForm);
-
+        console.log("Form Data:", formData);
         // Send the form data to the server using AJAX
         fetch(commentForm.getAttribute('action'), {
             method: 'POST',
@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(response => response.json())
         .then(data => {
+            if (!data || data.error) {
+                console.error('Error or empty response:', data);
+            }
+            console.log("Response from server:", data)
             // Handle the response (e.g., display a success message)
             console.log(data.message);
 
@@ -28,9 +32,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to fetch and update comments
     function fetchComments() {
+        console.log("Fetching comments...");
         fetch('get_comments/')
         .then(response => response.json())
         .then(comments => {
+            console.log("Comments fetched:", comments);
             // Clear the existing comments
             commentDisplay.innerHTML = '';
 
