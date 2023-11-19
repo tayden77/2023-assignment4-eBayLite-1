@@ -1,4 +1,5 @@
 {% extends "auctions/layout.html" %}
+{% load static %}
 
 {% block body %}
       
@@ -15,6 +16,14 @@
             
             <div class="col py-3 border light">
                 <h4><a href="{% url 'listing' auction.id %}" style="color: inherit;"><strong>{{ auction.title }}</strong></a></h4>
+                <div>
+                    <!-- Watchlist Icon -->
+                    {% if auction in user.watchlist.auctions.all %}
+                        <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart watchlist-icon in-watchlist" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: red;"></i>
+                    {% else %}
+                        <i id="watchlist-icon-{{ auction.id }}" class="fas fa-heart-broken watchlist-icon" onclick="toggleWatchlist(this)" data-auction-id="{{ auction.id }}" style="color: red;"></i>
+                    {% endif %}                    
+                </div>
                 <div>Description:</div>
                 <div><p>{{ auction.description }}</p></div>
                 <div>Category:</div>
@@ -32,5 +41,6 @@
         {% endif %}
     </div>
 
+    <script src="{% static 'auctions/watchlist.js' %}"></script>
     
 {% endblock %}
