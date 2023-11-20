@@ -111,3 +111,29 @@ body {
       max-width: 50%;
   }
 }
+
+.accordion-item {
+  background-color: rgb(40, 40, 40);
+  color: white;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: solid;
+  outline-color: rgb(69, 67, 67);
+  transition: 0.4s;
+}
+
+.active, .accordion-item:hover {
+  background-color: black;
+}
+
+.accordion-title {
+  color: orange;
+}
+
+.accordion-content {
+  background-color: black;
+  cursor: auto;
+}
