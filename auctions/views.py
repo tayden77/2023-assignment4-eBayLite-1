@@ -413,7 +413,7 @@ def comment(request, auction_id):
             # return successful message
             messages.success(request, 'Commented successfully.')
 
-            return HttpResponseRedirect(reverse("listing", args=(auction.id,)))
+            return JsonResponse({"message": "Comment added successfully", "status": "success"})
         
         # handle invalid comment form
         else:
