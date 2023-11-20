@@ -467,9 +467,10 @@ def removeWatchlist(request, auction_id):
         # If the request method is not a POST return a JSON error
         return JsonResponse({"status": "error", "message": "GET method not allowed"})
 
-def get_comments(request):
+
+def get_comments(request, auction_id):
     try:
-        comments = Comment.objects.all()
+        comments = Comment.objects.filter(auction=auction_id).order_by("-cm_date")
 
         # Manually serialize the comments into a JSON format
         comments_data = [
@@ -485,3 +486,5 @@ def get_comments(request):
         return JsonResponse(comments_data, safe=False, content_type='application/json')
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+    
