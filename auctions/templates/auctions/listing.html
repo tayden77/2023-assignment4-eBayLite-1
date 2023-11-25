@@ -120,34 +120,34 @@
 
     <!-- comment form -->
     {% if user.is_authenticated %}
-    <div class="container my-5" id="comment_block">
-        <h4>Leave your comment</h4>
-        <div data-auction-id="{{ auction.id }}" id="comment-section">
-            <form id="comment-form" action="{% url 'comment' auction.id %}" method="post">
-                {% csrf_token %} 
+        <div class="container my-5" id="comment_block">
+            <h4>Leave your comment</h4>
+            <div data-auction-id="{{ auction.id }}" id="comment-section">
+                <form id="comment-form" action="{% url 'comment' auction.id %}" method="post">
+                    {% csrf_token %} 
 
-                <div class="row">
-                    <div class="col">
-                        <div><label>Headline:</label></div>
-                        <div>{{ commentForm.headline }}</div>
+                    <div class="row">
+                        <div class="col">
+                            <div><label>Headline:</label></div>
+                            <div>{{ commentForm.headline }}</div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="row">
-                    <div class="col">
-                        <div><label>Content:</label></div>
-                        <div>{{ commentForm.message }}</div>
+                    <div class="row">
+                        <div class="col">
+                            <div><label>Content:</label></div>
+                            <div>{{ commentForm.message }}</div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="row">
-                    <div class="col"> 
-                        <button type="submit" id="comment_button" class="btn btn-primary" style="width: 120px">Submit</button>
-                    </div>          
-                </div>
-            </form>
+                    <div class="row">
+                        <div class="col"> 
+                            <button type="submit" id="comment_button" class="btn btn-primary" style="width: 120px">Submit</button>
+                        </div>          
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
     {% endif %}
 
     <!-- comments display -->
@@ -155,25 +155,25 @@
         <h4>Item comment(s)</h4>
         {% if comments %}
 
-        {% for comment in comments %}
-        <div class="card bg-dark mb-3">
-           
-            <div class="card-header">
-                <strong>{{ comment.user.username }} </strong>
-                <div class="text-muted small">
-                    commented on {{ comment.cm_date }}
-                </div>       
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">{{ comment.headline }}</h5>
-              <p class="card-text"> {{ comment.message }}</p>
-            </div>
-            
-        </div>
-        {% endfor %}
+            {% for comment in comments %}
+                <div class="card bg-dark mb-3">
+                
+                    <div class="card-header">
+                        <strong>{{ comment.user.username }} </strong>
+                        <div class="text-muted small">
+                            commented on {{ comment.cm_date }}
+                        </div>       
+                    </div>
+                    <div class="card-body">
+                    <h5 class="card-title">{{ comment.headline }}</h5>
+                    <p class="card-text"> {{ comment.message }}</p>
+                    </div>
+                    
+                </div>
+            {% endfor %}
 
         {% else %}
-        <p>No comments so far.</p>
+            <p>No comments so far.</p>
         {% endif %}
     </div> 
 
